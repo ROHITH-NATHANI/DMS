@@ -1,0 +1,9 @@
+{
+  "name": "Disaster Awareness & Response AI",
+  "description": "A comprehensive AI-powered platform for disaster preparedness, emergency response, and recovery with advanced GIS integration.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
