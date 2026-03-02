@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Camera, AlertTriangle, Loader2, CheckCircle2, MapPin } from 'lucide-react';
+import { motion } from 'motion/react';
 import { analyzeDamage } from '../services/geminiService';
 import { cn } from '../types';
 
@@ -128,13 +129,14 @@ export const ReportDamage: React.FC<ReportDamageProps> = ({ location, onReportSu
                   ))}
                 </ul>
               </div>
-              <button
+              <motion.button
                 onClick={handleSubmit}
+                whileTap={{ scale: 0.95 }}
                 disabled={isSubmitting}
-                className="w-full bg-zinc-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-black text-sm hover:bg-zinc-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-zinc-900/10"
               >
                 {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Submit Official Report"}
-              </button>
+              </motion.button>
             </div>
           )}
 

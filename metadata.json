@@ -1,6 +1,6 @@
 {
-  "name": "Disaster Awareness & Response AI",
-  "description": "A comprehensive AI-powered platform for disaster preparedness, emergency response, and recovery with advanced GIS integration.",
+  "name": "Sentinel: Disaster Intelligence Platform",
+  "description": "Professional-grade command center for real-time disaster awareness, emergency response coordination, and AI-driven risk mitigation.",
   "requestFramePermissions": [
     "camera",
     "microphone",

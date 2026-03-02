@@ -1,5 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -91,9 +93,32 @@ if (contactCount.count === 0) {
 
 async function startServer() {
   const app = express();
+  const httpServer = createServer(app);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
+  });
   const PORT = 3000;
 
   app.use(express.json({ limit: '10mb' }));
+
+  // Presence tracking
+  const activeUsers = new Set();
+  io.on("connection", (socket) => {
+    activeUsers.add(socket.id);
+    io.emit("presence:update", activeUsers.size);
+
+    socket.on("sos:trigger", (data) => {
+      socket.broadcast.emit("sos:alert", data);
+    });
+
+    socket.on("disconnect", () => {
+      activeUsers.delete(socket.id);
+      io.emit("presence:update", activeUsers.size);
+    });
+  });
 
   // API Routes
   app.get("/api/reports", (req, res) => {
@@ -106,7 +131,15 @@ async function startServer() {
     const info = db.prepare(
       "INSERT INTO reports (type, severity, description, latitude, longitude, image_url) VALUES (?, ?, ?, ?, ?, ?)"
     ).run(type, severity, description, latitude, longitude, image_url);
-    res.json({ id: info.lastInsertRowid });
+    
+    const newReport = {
+      id: info.lastInsertRowid,
+      type, severity, description, latitude, longitude, image_url,
+      timestamp: new Date().toISOString()
+    };
+    
+    io.emit("report:new", newReport);
+    res.json(newReport);
   });
 
   app.get("/api/shelters", (req, res) => {
@@ -151,7 +184,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

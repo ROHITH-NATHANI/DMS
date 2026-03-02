@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Send, User, Bot, Loader2, Volume2 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { getPsychologicalSupport } from '../services/geminiService';
 import { cn } from '../types';
 
@@ -96,15 +97,18 @@ export const Chatbot: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask for help or instructions..."
-            className="w-full bg-zinc-100 border-none rounded-full py-3 pl-4 pr-12 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+            inputMode="text"
+            autoComplete="off"
+            className="w-full bg-zinc-100 border-none rounded-full py-4 pl-6 pr-14 text-sm focus:ring-2 focus:ring-emerald-500 outline-none shadow-inner"
           />
-          <button
+          <motion.button
             onClick={handleSend}
+            whileTap={{ scale: 0.9 }}
             disabled={isLoading}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors disabled:opacity-50 shadow-lg shadow-emerald-600/20"
           >
-            <Send size={14} />
-          </button>
+            <Send size={16} />
+          </motion.button>
         </div>
       </div>
     </div>
