@@ -43,6 +43,22 @@ db.exec(`
     occupancy INTEGER,
     address TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS news (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    content TEXT,
+    source TEXT,
+    type TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS emergency_contacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    number TEXT,
+    category TEXT
+  );
 `);
 
 // Seed some shelters if empty
@@ -52,6 +68,25 @@ if (shelterCount.count === 0) {
   insertShelter.run("Central High School", "Shelter", 37.7749, -122.4194, 500, 120, "123 Main St");
   insertShelter.run("City Hospital", "Medical", 37.7849, -122.4094, 200, 180, "456 Health Ave");
   insertShelter.run("Westside Police Station", "Police", 37.7649, -122.4294, 50, 10, "789 Safety Blvd");
+}
+
+// Seed news if empty
+const newsCount = db.prepare("SELECT COUNT(*) as count FROM news").get() as { count: number };
+if (newsCount.count === 0) {
+  const insertNews = db.prepare("INSERT INTO news (title, content, source, type) VALUES (?, ?, ?, ?)");
+  insertNews.run("Flood Warning Issued", "Heavy rainfall expected in the next 24 hours. Residents in low-lying areas should prepare for evacuation.", "National Weather Service", "alert");
+  insertNews.run("New Shelter Opened", "A new emergency shelter has been opened at the Community Center on 5th Street.", "City Emergency Management", "info");
+  insertNews.run("Road Clearance Update", "Main Street has been cleared of debris and is now open for emergency vehicles.", "Department of Transportation", "success");
+}
+
+// Seed contacts if empty
+const contactCount = db.prepare("SELECT COUNT(*) as count FROM emergency_contacts").get() as { count: number };
+if (contactCount.count === 0) {
+  const insertContact = db.prepare("INSERT INTO emergency_contacts (name, number, category) VALUES (?, ?, ?)");
+  insertContact.run("Emergency Services", "911", "Emergency");
+  insertContact.run("Red Cross Hotline", "1-800-RED-CROSS", "Support");
+  insertContact.run("City Emergency Management", "555-0199", "Official");
+  insertContact.run("Local Police (Non-Emergency)", "555-0123", "Police");
 }
 
 async function startServer() {
@@ -77,6 +112,16 @@ async function startServer() {
   app.get("/api/shelters", (req, res) => {
     const shelters = db.prepare("SELECT * FROM shelters").all();
     res.json(shelters);
+  });
+
+  app.get("/api/news", (req, res) => {
+    const news = db.prepare("SELECT * FROM news ORDER BY timestamp DESC").all();
+    res.json(news);
+  });
+
+  app.get("/api/contacts", (req, res) => {
+    const contacts = db.prepare("SELECT * FROM emergency_contacts").all();
+    res.json(contacts);
   });
 
   app.get("/api/missing-persons", (req, res) => {

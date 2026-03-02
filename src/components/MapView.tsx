@@ -40,12 +40,13 @@ export const MapView: React.FC<MapViewProps> = ({ center, shelters, reports, haz
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 50);
+    setIsMounted(false);
+    const timer = setTimeout(() => setIsMounted(true), 100);
     return () => {
       clearTimeout(timer);
       setIsMounted(false);
     };
-  }, [id]);
+  }, [id, center[0], center[1]]);
 
   if (!isMounted) {
     return (

@@ -48,7 +48,10 @@ export async function analyzeDamage(imageBase64: string) {
       },
     },
   });
-  return JSON.parse(response.text || "{}");
+  const text = response.text || "{}";
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const cleanJson = jsonMatch ? jsonMatch[0] : text;
+  return JSON.parse(cleanJson);
 }
 
 export async function getPsychologicalSupport(message: string) {

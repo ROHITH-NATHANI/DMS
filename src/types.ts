@@ -37,3 +37,19 @@ export interface MissingPerson {
   status: string;
   timestamp: string;
 }
+
+export interface NewsUpdate {
+  id: number;
+  title: string;
+  content: string;
+  source: string;
+  timestamp: string;
+  type: 'alert' | 'info' | 'success';
+}
+
+export interface EmergencyContact {
+  id: number;
+  name: string;
+  number: string;
+  category: string;
+}

@@ -15,14 +15,19 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertTriangle,
-  Bot
+  Bot,
+  Newspaper,
+  Phone,
+  Radio,
+  Clock,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapView } from './components/MapView';
 import { Chatbot } from './components/Chatbot';
 import { ReportDamage } from './components/ReportDamage';
 import { getRiskAlerts, getEmergencyInstructions } from './services/geminiService';
-import { Shelter, Report, MissingPerson, cn } from './types';
+import { Shelter, Report, MissingPerson, NewsUpdate, EmergencyContact, cn } from './types';
 
 import Markdown from 'react-markdown';
 
@@ -31,6 +36,8 @@ export default function App() {
   const [location, setLocation] = useState<[number, number]>([37.7749, -122.4194]); // Default SF
   const [shelters, setShelters] = useState<Shelter[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
+  const [news, setNews] = useState<NewsUpdate[]>([]);
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [riskAlert, setRiskAlert] = useState<string | null>(null);
   const [isSOSActive, setIsSOSActive] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -47,6 +54,8 @@ export default function App() {
     fetchShelters();
     fetchReports();
     fetchRisks();
+    fetchNews();
+    fetchContacts();
   }, []);
 
   const fetchShelters = async () => {
@@ -59,6 +68,18 @@ export default function App() {
     const res = await fetch('/api/reports');
     const data = await res.json();
     setReports(data);
+  };
+
+  const fetchNews = async () => {
+    const res = await fetch('/api/news');
+    const data = await res.json();
+    setNews(data);
+  };
+
+  const fetchContacts = async () => {
+    const res = await fetch('/api/contacts');
+    const data = await res.json();
+    setContacts(data);
   };
 
   const fetchRisks = async () => {
@@ -171,14 +192,46 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="md:col-span-2 h-[400px] rounded-[2.5rem] overflow-hidden shadow-xl border border-zinc-200">
-                    <MapView 
-                      id="dashboard-map"
-                      center={location} 
-                      shelters={shelters} 
-                      reports={reports}
-                    />
+                  <div className="md:col-span-2 space-y-6">
+                    <div className="h-[400px] rounded-[2.5rem] overflow-hidden shadow-xl border border-zinc-200">
+                      <MapView 
+                        id="dashboard-map"
+                        center={location} 
+                        shelters={shelters} 
+                        reports={reports}
+                      />
+                    </div>
+                    
+                    <div className="bg-white rounded-[2.5rem] border border-zinc-100 p-8 shadow-sm">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <Newspaper className="text-zinc-400" size={20} />
+                          <h3 className="font-bold text-zinc-900 uppercase text-xs tracking-widest">Official Updates</h3>
+                        </div>
+                        <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors">View All</button>
+                      </div>
+                      <div className="space-y-4">
+                        {news.slice(0, 3).map((item) => (
+                          <div key={item.id} className="flex gap-4 p-4 rounded-2xl hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-100">
+                            <div className={cn(
+                              "w-1 h-12 rounded-full shrink-0",
+                              item.type === 'alert' ? "bg-red-500" : item.type === 'success' ? "bg-emerald-500" : "bg-blue-500"
+                            )} />
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">{item.source}</span>
+                                <span className="text-[10px] text-zinc-300">•</span>
+                                <span className="text-[10px] text-zinc-400">{new Date(item.timestamp).toLocaleTimeString()}</span>
+                              </div>
+                              <h4 className="font-bold text-zinc-900 leading-tight mb-1">{item.title}</h4>
+                              <p className="text-xs text-zinc-500 line-clamp-2">{item.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
+                  
                   <div className="space-y-6">
                     <div className="bg-orange-50 border border-orange-100 p-6 rounded-[2rem] shadow-sm max-h-[400px] overflow-y-auto custom-scrollbar">
                       <div className="flex items-center gap-2 mb-4 sticky top-0 bg-orange-50 py-1 z-10">
@@ -189,10 +242,14 @@ export default function App() {
                         {riskAlert ? <Markdown>{riskAlert}</Markdown> : "Analyzing local weather and geological data..."}
                       </div>
                     </div>
+                    
                     <div className="bg-zinc-900 text-white p-6 rounded-[2rem] shadow-xl">
-                      <h3 className="font-bold mb-2">Emergency Kit</h3>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Radio className="text-emerald-500" size={18} />
+                        <h3 className="font-bold text-xs uppercase tracking-widest">Emergency Kit</h3>
+                      </div>
                       <div className="space-y-2">
-                        {["Water (3L/day)", "Non-perishables", "First Aid Kit"].map((item, i) => (
+                        {["Water (3L/day)", "Non-perishables", "First Aid Kit", "Flashlight", "Batteries"].map((item, i) => (
                           <div key={i} className="flex items-center gap-2 text-xs opacity-80">
                             <CheckCircle2 size={12} className="text-emerald-500" />
                             {item}
@@ -205,6 +262,28 @@ export default function App() {
                       >
                         Full Checklist
                       </button>
+                    </div>
+
+                    <div className="bg-white border border-zinc-100 p-6 rounded-[2rem] shadow-sm">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Phone className="text-zinc-400" size={18} />
+                        <h3 className="font-bold text-zinc-900 uppercase text-xs tracking-widest">Quick Contacts</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {contacts.slice(0, 3).map((contact) => (
+                          <a 
+                            key={contact.id} 
+                            href={`tel:${contact.number}`}
+                            className="flex items-center justify-between p-3 rounded-xl hover:bg-zinc-50 transition-colors border border-zinc-50"
+                          >
+                            <div>
+                              <p className="text-xs font-bold text-zinc-900">{contact.name}</p>
+                              <p className="text-[10px] text-zinc-400">{contact.category}</p>
+                            </div>
+                            <span className="text-xs font-mono font-bold text-emerald-600">{contact.number}</span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -303,12 +382,14 @@ export default function App() {
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
                   <div className="flex flex-col justify-center items-center md:items-start text-center md:text-left space-y-8">
-                    <h2 className="text-4xl md:text-6xl font-display font-black italic leading-none">Emergency<br/>Response</h2>
-                    <p className="text-zinc-500 max-w-sm">One-tap SOS signal sends your live GPS coordinates to local authorities and emergency contacts.</p>
+                    <div className="space-y-4">
+                      <h2 className="text-4xl md:text-6xl font-display font-black italic leading-none">Emergency<br/>Response</h2>
+                      <p className="text-zinc-500 max-w-sm">One-tap SOS signal sends your live GPS coordinates to local authorities and emergency contacts.</p>
+                    </div>
                     
                     <div className="relative group">
                       <div className={cn(
-                        "w-64 h-64 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl",
+                        "w-64 h-64 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl relative z-10",
                         isSOSActive ? "bg-red-600 scale-110" : "bg-red-500 hover:bg-red-600 cursor-pointer"
                       )} onClick={handleSOS}>
                         <div className="text-white flex flex-col items-center">
@@ -319,21 +400,41 @@ export default function App() {
                       {!isSOSActive && (
                         <div className="absolute -inset-8 border-2 border-red-200 rounded-full animate-ping opacity-20 pointer-events-none" />
                       )}
+                      {isSOSActive && (
+                        <div className="absolute -inset-12 border-4 border-red-500/30 rounded-full animate-pulse pointer-events-none" />
+                      )}
+                    </div>
+
+                    <div className="flex gap-4 w-full max-w-sm">
+                      <div className="flex-1 bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm text-center">
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Status</p>
+                        <p className={cn("text-xs font-bold", isSOSActive ? "text-red-600 animate-pulse" : "text-emerald-600")}>
+                          {isSOSActive ? "SIGNALING..." : "READY"}
+                        </p>
+                      </div>
+                      <div className="flex-1 bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm text-center">
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">GPS Lock</p>
+                        <p className="text-xs font-bold text-zinc-900">ACTIVE</p>
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-6">
                     <div className="grid grid-cols-2 gap-4">
-                      <button className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex flex-col items-center gap-3 hover:bg-zinc-50 transition-colors">
-                        <Users className="text-blue-500" size={32} />
+                      <button className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex flex-col items-center gap-3 hover:bg-zinc-50 transition-colors group">
+                        <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                          <Users size={24} />
+                        </div>
                         <span className="text-sm font-bold">Find Family</span>
                       </button>
-                      <button className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex flex-col items-center gap-3 hover:bg-zinc-50 transition-colors">
-                        <AlertTriangle className="text-orange-500" size={32} />
+                      <button className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex flex-col items-center gap-3 hover:bg-zinc-50 transition-colors group">
+                        <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                          <AlertTriangle size={24} />
+                        </div>
                         <span className="text-sm font-bold">Hazard Alert</span>
                       </button>
                     </div>
-                    <div className="flex-1 min-h-[400px]">
+                    <div className="flex-1 min-h-[400px] rounded-[2.5rem] overflow-hidden border border-zinc-100 shadow-xl">
                       <Chatbot />
                     </div>
                   </div>
@@ -418,41 +519,74 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 className="p-6 md:p-0 space-y-12"
               >
-                <div className="max-w-3xl">
-                  <h2 className="text-4xl md:text-6xl font-display font-black italic mb-8 leading-none">System<br/>Intelligence</h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] shadow-xl">
-                      <h4 className="font-bold text-emerald-400 mb-4 flex items-center gap-2">
-                        <Bot size={20} /> AI Models & APIs
-                      </h4>
-                      <ul className="space-y-3 text-sm opacity-80">
-                        <li className="flex gap-3"><span className="text-emerald-500">01</span> Gemini 3 Flash: Reasoning & Chat</li>
-                        <li className="flex gap-3"><span className="text-emerald-500">02</span> Gemini Vision: Damage Assessment</li>
-                        <li className="flex gap-3"><span className="text-emerald-500">03</span> Search Grounding: Live Weather</li>
-                        <li className="flex gap-3"><span className="text-emerald-500">04</span> Web Audio: Voice Support</li>
-                      </ul>
-                    </div>
+                <div className="flex flex-col md:flex-row gap-12">
+                  <div className="md:w-1/2 space-y-8">
+                    <div>
+                      <h2 className="text-4xl md:text-6xl font-display font-black italic mb-8 leading-none">System<br/>Intelligence</h2>
+                      <div className="grid grid-cols-1 gap-6">
+                        <div className="bg-zinc-900 text-white p-8 rounded-[2.5rem] shadow-xl">
+                          <h4 className="font-bold text-emerald-400 mb-4 flex items-center gap-2">
+                            <Bot size={20} /> AI Models & APIs
+                          </h4>
+                          <ul className="space-y-3 text-sm opacity-80">
+                            <li className="flex gap-3"><span className="text-emerald-500">01</span> Gemini 3 Flash: Reasoning & Chat</li>
+                            <li className="flex gap-3"><span className="text-emerald-500">02</span> Gemini Vision: Damage Assessment</li>
+                            <li className="flex gap-3"><span className="text-emerald-500">03</span> Search Grounding: Live Weather & Risks</li>
+                            <li className="flex gap-3"><span className="text-emerald-500">04</span> OpenStreetMap: Geospatial Intelligence</li>
+                          </ul>
+                        </div>
+                        
+                        <div className="bg-white border border-zinc-100 p-8 rounded-[2.5rem] shadow-sm">
+                          <h4 className="font-bold text-zinc-900 mb-4 flex items-center gap-2">
+                            <Radio size={20} className="text-blue-500" /> Network Status
+                          </h4>
+                          <div className="space-y-4">
+                            {[
+                              { label: "Database", status: "Operational", color: "text-emerald-500" },
+                              { label: "Vite Dev Server", status: "Active", color: "text-emerald-500" },
+                              { label: "Gemini API", status: "Connected", color: "text-emerald-500" },
+                              { label: "GPS Provider", status: "Locked", color: "text-emerald-500" }
+                            ].map((item, i) => (
+                              <div key={i} className="flex justify-between items-center text-sm">
+                                <span className="text-zinc-500">{item.label}</span>
+                                <span className={cn("font-bold", item.color)}>{item.status}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
 
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-200 shadow-sm">
-                      <h4 className="font-bold text-zinc-900 mb-4 flex items-center gap-2">
-                        <MapIcon size={20} /> GIS Architecture
-                      </h4>
-                      <p className="text-sm text-zinc-600 leading-relaxed">Hybrid architecture using Leaflet for rendering and Gemini for spatial reasoning. Real-time GPS tracking via Browser Geolocation API with offline support capabilities.</p>
+                        <div className="bg-emerald-600 text-white p-8 rounded-[2.5rem] shadow-xl">
+                          <h4 className="font-bold mb-4 flex items-center gap-2">
+                            <ShieldAlert size={20} /> Privacy First
+                          </h4>
+                          <p className="text-sm opacity-90 leading-relaxed">End-to-end encryption for SOS signals. Data retention limited to active disaster periods to ensure user safety.</p>
+                        </div>
+                      </div>
                     </div>
+                  </div>
 
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-200 shadow-sm">
-                      <h4 className="font-bold text-zinc-900 mb-4 flex items-center gap-2">
-                        <Users size={20} /> Community Impact
-                      </h4>
-                      <p className="text-sm text-zinc-600 leading-relaxed">Designed for government partnerships and NGO integration. Real-time heatmaps allow authorities to optimize rescue resource allocation.</p>
-                    </div>
-
-                    <div className="bg-emerald-600 text-white p-8 rounded-[2.5rem] shadow-xl">
-                      <h4 className="font-bold mb-4 flex items-center gap-2">
-                        <ShieldAlert size={20} /> Privacy First
-                      </h4>
-                      <p className="text-sm opacity-90 leading-relaxed">End-to-end encryption for SOS signals. Anonymous reporting available. Data retention limited to active disaster periods to ensure user safety.</p>
+                  <div className="md:w-1/2 space-y-8">
+                    <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Emergency Directory</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      {contacts.map((contact) => (
+                        <div key={contact.id} className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex items-center justify-between group hover:shadow-md transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-zinc-900 group-hover:text-white transition-colors">
+                              <Phone size={20} />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-zinc-900">{contact.name}</h4>
+                              <p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">{contact.category}</p>
+                            </div>
+                          </div>
+                          <a 
+                            href={`tel:${contact.number}`}
+                            className="flex items-center gap-2 bg-zinc-50 px-4 py-2 rounded-xl text-sm font-mono font-bold text-zinc-900 hover:bg-zinc-900 hover:text-white transition-colors"
+                          >
+                            {contact.number} <ExternalLink size={14} />
+                          </a>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
