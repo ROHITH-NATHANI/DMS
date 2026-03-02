@@ -209,14 +209,24 @@ export default function App() {
               </div>
               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Operational</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-zinc-500 uppercase">Rescuers</p>
-                <p className="text-lg font-black text-white">{presenceCount}</p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase">AI Engine</p>
+                <div className="flex items-center gap-1.5">
+                  <div className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    process.env.GEMINI_API_KEY ? "bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]" : "bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"
+                  )} />
+                  <p className="text-sm font-black text-white">{process.env.GEMINI_API_KEY ? "Active" : "Offline"}</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-zinc-500 uppercase">Incidents</p>
-                <p className="text-lg font-black text-red-500">{reports.length}</p>
+              <div className="flex justify-between items-center">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase">Rescuers</p>
+                <p className="text-sm font-black text-white">{presenceCount}</p>
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase">Incidents</p>
+                <p className="text-sm font-black text-red-500">{reports.length}</p>
               </div>
             </div>
           </div>
